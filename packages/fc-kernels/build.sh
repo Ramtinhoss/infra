@@ -23,7 +23,7 @@ function build_version {
 }
 
 echo "Cloning the linux kernel repository"
-git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux
+git clone --depth 1 https://github.com/torvalds/linux.git linux
 cd linux
 
 grep -v '^ *#' <../kernel_versions.txt | while IFS= read -r version; do
