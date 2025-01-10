@@ -37,7 +37,7 @@ const (
 	waitTimeForFCConfig = 500 * time.Millisecond
 
 	waitTimeForFCStart  = 10 * time.Second
-	waitTimeForStartCmd = 15 * time.Second
+	waitTimeForStartCmd = 30 * time.Second
 )
 
 type Snapshot struct {
