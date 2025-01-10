@@ -47,11 +47,6 @@ variable "bucket_name" {
     default = ""
 }
 
-variable "orchestrator_checksum" {
-  type    = string
-  default = ""
-}
-
 variable "template_bucket_name" {
   type    = string
   default = ""
@@ -115,9 +110,6 @@ job "orchestrator" {
 
       artifact {
         source      = "gcs::https://www.googleapis.com/storage/v1/${var.bucket_name}/orchestrator"
-        options {
-            checksum    = "md5:${var.orchestrator_checksum}"
-        }
       }
     }
   }
