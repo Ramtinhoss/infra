@@ -9,8 +9,6 @@ import (
 
 	"github.com/jellydator/ttlcache/v3"
 	"golang.org/x/sys/unix"
-
-	"github.com/e2b-dev/infra/packages/shared/pkg/storage/gcs"
 )
 
 const DefaultCachePath = "/orchestrator/build"
@@ -22,7 +20,6 @@ type deleteDiff struct {
 
 type DiffStore struct {
 	cachePath string
-	bucket    *gcs.BucketHandle
 	cache     *ttlcache.Cache[string, Diff]
 	ctx       context.Context
 
@@ -33,7 +30,7 @@ type DiffStore struct {
 	pdDelay time.Duration
 }
 
-func NewDiffStore(bucket *gcs.BucketHandle, ctx context.Context, cachePath string, ttl, delay time.Duration, maxUsedPercentage float64) (*DiffStore, error) {
+func NewDiffStore(ctx context.Context, cachePath string, ttl, delay time.Duration, maxUsedPercentage float64) (*DiffStore, error) {
 	err := os.MkdirAll(cachePath, 0o755)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cache directory: %w", err)
@@ -45,7 +42,6 @@ func NewDiffStore(bucket *gcs.BucketHandle, ctx context.Context, cachePath strin
 
 	ds := &DiffStore{
 		cachePath: cachePath,
-		bucket:    bucket,
 		cache:     cache,
 		ctx:       ctx,
 		pdSizes:   make(map[string]*deleteDiff),
@@ -68,9 +64,11 @@ func NewDiffStore(bucket *gcs.BucketHandle, ctx context.Context, cachePath strin
 	return ds, nil
 }
 
-func (s *DiffStore) Get(buildId string, diffType DiffType, blockSize int64) (Diff, error) {
-	diff := newStorageDiff(s.cachePath, buildId, diffType, blockSize)
+func (s *DiffStore) Close() {
+	s.cache.Stop()
+}
 
+func (s *DiffStore) Get(diff Diff) (Diff, error) {
 	s.resetDelete(diff.CacheKey())
 	source, found := s.cache.GetOrSet(
 		diff.CacheKey(),
@@ -84,7 +82,7 @@ func (s *DiffStore) Get(buildId string, diffType DiffType, blockSize int64) (Dif
 	}
 
 	if !found {
-		err := diff.Init(s.ctx, s.bucket)
+		err := diff.Init(s.ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to init source: %w", err)
 		}
@@ -93,17 +91,13 @@ func (s *DiffStore) Get(buildId string, diffType DiffType, blockSize int64) (Dif
 	return value, nil
 }
 
-func (s *DiffStore) Add(buildId string, t DiffType, d Diff) {
-	storagePath := storagePath(buildId, t)
-
-	s.resetDelete(storagePath)
-	s.cache.Set(storagePath, d, ttlcache.DefaultTTL)
+func (s *DiffStore) Add(d Diff) {
+	s.resetDelete(d.CacheKey())
+	s.cache.Set(d.CacheKey(), d, ttlcache.DefaultTTL)
 }
 
-func (s *DiffStore) Has(buildId string, t DiffType) bool {
-	storagePath := storagePath(buildId, t)
-
-	return s.cache.Has(storagePath)
+func (s *DiffStore) Has(d Diff) bool {
+	return s.cache.Has(d.CacheKey())
 }
 
 func (s *DiffStore) startDiskSpaceEviction(threshold float64) {
