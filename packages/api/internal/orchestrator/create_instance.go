@@ -193,6 +193,8 @@ func (o *Orchestrator) CreateSandbox(
 		return nil, errMsg
 	}
 
+	o.dns.Add(sbx.SandboxID, node.Info.IPAddress)
+
 	return &sbx, nil
 }
 
