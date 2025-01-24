@@ -11,8 +11,8 @@ init:
 
 .PHONY: generate
 generate:
-	# You need to install protobuf (brew install protobuf) and following go packages: protoc-gen-go, protoc-gen-go-grpc
-	# https://grpc.io/docs/languages/go/quickstart/
+	@# You need to install protobuf (brew install protobuf) and following go packages: protoc-gen-go, protoc-gen-go-grpc
+	@# https://grpc.io/docs/languages/go/quickstart/
 	@echo "Generating..."
 	@protoc --go_out=../shared/pkg/grpc/orchestrator/ --go_opt=paths=source_relative --go-grpc_out=../shared/pkg/grpc/orchestrator/ --go-grpc_opt=paths=source_relative orchestrator.proto
 	@echo "Done"

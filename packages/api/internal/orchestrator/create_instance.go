@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/e2b-dev/infra/packages/shared/pkg/id"
 	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -54,6 +55,7 @@ func (o *Orchestrator) CreateSandbox(
 	//
 	// telemetry.ReportEvent(childCtx, "Reserved sandbox for team")
 	// defer releaseTeamSandboxReservation()
+	internalID := id.Generate()
 
 	features, err := sandbox.NewVersionInfo(build.FirecrackerVersion)
 	if err != nil {
@@ -66,6 +68,7 @@ func (o *Orchestrator) CreateSandbox(
 
 	sbxRequest := &orchestrator.SandboxCreateRequest{
 		Sandbox: &orchestrator.SandboxConfig{
+			InternalId:         internalID,
 			BaseTemplateId:     baseTemplateID,
 			TemplateId:         *build.EnvID,
 			Alias:              &alias,
@@ -167,6 +170,7 @@ func (o *Orchestrator) CreateSandbox(
 		StartTime:          startTime,
 		EndTime:            endTime,
 		Instance:           &sbx,
+		InternalID:         internalID,
 		BuildID:            &build.ID,
 		TeamID:             &team.Team.ID,
 		Metadata:           metadata,
@@ -193,7 +197,8 @@ func (o *Orchestrator) CreateSandbox(
 		return nil, errMsg
 	}
 
-	o.dns.Add(sbx.SandboxID, node.Info.IPAddress)
+	// This is to add DNS record immediately instead of waiting for the instance to start
+	o.dns.Add(sandboxID, internalID, node.Info.IPAddress)
 
 	return &sbx, nil
 }

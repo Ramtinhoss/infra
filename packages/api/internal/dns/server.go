@@ -16,29 +16,38 @@ const ttl = 0
 
 const defaultRoutingIP = "127.0.0.1"
 
+type dnsRecord struct {
+	IP         string
+	InternalID string
+}
 type DNS struct {
 	mu      sync.Mutex
-	records *smap.Map[string]
+	records *smap.Map[dnsRecord]
 }
 
 func New() *DNS {
 	return &DNS{
-		records: smap.New[string](),
+		records: smap.New[dnsRecord](),
 	}
 }
 
-func (d *DNS) Add(sandboxID, ip string) {
-	d.records.Insert(d.hostname(sandboxID), ip)
+func (d *DNS) Add(sandboxID, internalID, ip string) {
+	d.records.Insert(d.hostname(sandboxID), dnsRecord{IP: ip, InternalID: internalID})
 }
 
-func (d *DNS) Remove(sandboxID, ip string) {
-	d.records.RemoveCb(d.hostname(sandboxID), func(key string, v string, exists bool) bool {
-		return v == ip
+func (d *DNS) Remove(sandboxID, internalID string) {
+	d.records.RemoveCb(d.hostname(sandboxID), func(key string, v dnsRecord, exists bool) bool {
+		return v.InternalID == internalID
 	})
 }
 
 func (d *DNS) get(hostname string) (string, bool) {
-	return d.records.Get(hostname)
+	v, ok := d.records.Get(hostname)
+	if !ok {
+		return "", false
+	}
+
+	return v.IP, true
 }
 
 func (*DNS) hostname(sandboxID string) string {

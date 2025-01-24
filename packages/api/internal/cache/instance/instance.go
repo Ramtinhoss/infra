@@ -27,6 +27,7 @@ type InstanceInfo struct {
 	Instance           *api.Sandbox
 	TeamID             *uuid.UUID
 	BuildID            *uuid.UUID
+	InternalID         string
 	Metadata           map[string]string
 	MaxInstanceLength  time.Duration
 	StartTime          time.Time
