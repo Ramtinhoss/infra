@@ -6,14 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-
 	"github.com/e2b-dev/infra/packages/api/internal/api"
 	authcache "github.com/e2b-dev/infra/packages/api/internal/cache/auth"
 	"github.com/e2b-dev/infra/packages/shared/pkg/logs"
-	"github.com/e2b-dev/infra/packages/shared/pkg/meters"
 	"github.com/e2b-dev/infra/packages/shared/pkg/models"
 	"github.com/e2b-dev/infra/packages/shared/pkg/telemetry"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (a *APIStore) startSandbox(
@@ -31,28 +29,6 @@ func (a *APIStore) startSandbox(
 	clientID *string,
 	baseTemplateID string,
 ) (*api.Sandbox, error) {
-	_, rateSpan := a.Tracer.Start(ctx, "rate-limit")
-	counter, err := meters.GetUpDownCounter(meters.RateLimitCounterMeterName)
-	if err != nil {
-		a.logger.Errorf("error getting counter: %s", err)
-	}
-
-	counter.Add(ctx, 1)
-	limitErr := sandboxStartRequestLimit.Acquire(ctx, 1)
-	counter.Add(ctx, -1)
-	if limitErr != nil {
-		errMsg := fmt.Errorf("error when acquiring parallel lock: %w", limitErr)
-		telemetry.ReportCriticalError(ctx, errMsg)
-
-		return nil, errMsg
-	}
-
-	defer sandboxStartRequestLimit.Release(1)
-	telemetry.ReportEvent(ctx, "create sandbox parallel limit semaphore slot acquired")
-
-	rateSpan.End()
-	telemetry.ReportEvent(ctx, "Reserved team sandbox slot")
-
 	startTime := time.Now()
 	endTime := startTime.Add(timeout)
 

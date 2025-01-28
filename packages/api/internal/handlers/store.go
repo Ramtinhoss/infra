@@ -7,15 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	loki "github.com/grafana/loki/pkg/logcli/client"
-	nomadapi "github.com/hashicorp/nomad/api"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
-	"golang.org/x/sync/semaphore"
-
 	analyticscollector "github.com/e2b-dev/infra/packages/api/internal/analytics_collector"
 	"github.com/e2b-dev/infra/packages/api/internal/api"
 	authcache "github.com/e2b-dev/infra/packages/api/internal/cache/auth"
@@ -27,13 +18,15 @@ import (
 	"github.com/e2b-dev/infra/packages/shared/pkg/db"
 	"github.com/e2b-dev/infra/packages/shared/pkg/env"
 	"github.com/e2b-dev/infra/packages/shared/pkg/logging"
-)
 
-const (
-	defaultRequestLimit = 16
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	loki "github.com/grafana/loki/pkg/logcli/client"
+	nomadapi "github.com/hashicorp/nomad/api"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
-
-var sandboxStartRequestLimit = semaphore.NewWeighted(defaultRequestLimit)
 
 type APIStore struct {
 	analytics            *analyticscollector.Analytics
