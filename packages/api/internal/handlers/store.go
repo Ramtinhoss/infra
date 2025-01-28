@@ -90,7 +90,7 @@ func NewAPIStore() *APIStore {
 		panic(err)
 	}
 
-	orch, err := orchestrator.New(ctx, tracer, nomadClient, logger, posthogClient)
+	orch, err := orchestrator.New(ctx, tracer, nomadClient, logger, posthogClient, dbClient)
 	if err != nil {
 		logger.Errorf("Error initializing Orchestrator client\n: %v", err)
 		panic(err)
