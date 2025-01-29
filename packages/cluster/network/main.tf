@@ -75,8 +75,21 @@ locals {
         request_path = "/v1/status/peers"
         port         = 8500
       }
+    }
+    redis = {
+      protocol                        = "HTTP"
+      port                            = 6379
+      port_name                       = "redis"
+      timeout_sec                     = 10
+      connection_draining_timeout_sec = 1
+      http_health_check = {
+        request_path = "/health"
+        port         = 6379
+      }
       groups = [
-      { group = var.server_instance_group }]
+      { group = var.client_instance_group },
+      { group = var.api_instance_group }
+      ]
     }
   }
   health_checked_backends = { for backend_index, backend_value in local.backends : backend_index => backend_value }
@@ -201,7 +214,17 @@ resource "google_compute_url_map" "orch_map" {
     ]
     path_matcher = "session-paths"
   }
+  host_rule {
+    hosts = [
+      "redis.${var.domain_name}",
+    ]
+    path_matcher = "redis-paths"
+  }
 
+  path_matcher {
+    name            = "redis-paths"
+    default_service = google_compute_backend_service.default["redis"].self_link
+  }
   path_matcher {
     name            = "api-paths"
     default_service = google_compute_backend_service.default["api"].self_link
