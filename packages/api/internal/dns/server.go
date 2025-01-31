@@ -52,12 +52,13 @@ func New(ctx context.Context, rc *redis.Client, logger *zap.SugaredLogger) *DNS 
 }
 
 func (d *DNS) Add(ctx context.Context, sandboxID, ip string) {
+	d.logger.Debugf("Adding sandbox %s with IP %s to DNS cache", d.cacheKey(sandboxID), ip)
 	switch {
 	case d.remote != nil:
 		d.remote.Set(&cache.Item{
 			Ctx:   ctx,
 			TTL:   redisTTL,
-			Key:   sandboxID,
+			Key:   d.cacheKey(sandboxID),
 			Value: ip,
 		})
 	case d.local != nil:
@@ -66,6 +67,7 @@ func (d *DNS) Add(ctx context.Context, sandboxID, ip string) {
 }
 
 func (d *DNS) Remove(ctx context.Context, sandboxID, ip string) {
+	d.logger.Debugf("Removing sandbox %s with IP %s from DNS cache", d.cacheKey(sandboxID), ip)
 	switch {
 	case d.remote != nil:
 		if err := d.remote.Delete(ctx, d.cacheKey(sandboxID)); err != nil {
@@ -77,6 +79,7 @@ func (d *DNS) Remove(ctx context.Context, sandboxID, ip string) {
 }
 
 func (d *DNS) Get(ctx context.Context, sandboxID string) net.IP {
+	d.logger.Debugf("Getting sandbox %s from DNS cache", d.cacheKey(sandboxID))
 	var res string
 	switch {
 	case d.remote != nil:
@@ -112,7 +115,7 @@ func (d *DNS) cacheKey(id string) string {
 	case d.remote != nil:
 		return fmt.Sprintf("%s%s", cachedDnsPrefix, id)
 	case d.local != nil:
-		return fmt.Sprintf("%s.", id)
+		return id
 	default:
 		return id
 	}
@@ -139,7 +142,7 @@ func (d *DNS) handleDNSRequest(ctx context.Context, w resolver.ResponseWriter, r
 					Class:  resolver.ClassINET,
 					Ttl:    ttl,
 				},
-				A: d.Get(ctx, sandboxID),
+				A: d.Get(ctx, strings.TrimSuffix(sandboxID, ".")),
 			})
 		}
 	}

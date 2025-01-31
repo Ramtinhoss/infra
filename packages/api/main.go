@@ -220,7 +220,7 @@ func main() {
 	// pass the signal context so that handlers know when shutdown is happening.
 	s := NewGinServer(signalCtx, apiStore, swagger, port)
 
-	//////////////////////////
+	// ////////////////////////
 	//
 	// Start the HTTP service
 

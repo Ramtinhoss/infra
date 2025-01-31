@@ -10,6 +10,7 @@ require (
 	github.com/gin-contrib/cors v1.6.0
 	github.com/gin-contrib/size v0.0.0-20230212012657-e14a14094dc4
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gogo/status v1.1.1
 	// https://github.com/grafana/loki/issues/2826. This is the equivalent of the main branch at 2023/11/27 (d62d4e37d1f3dba83cf10a1f6db82830794e1c05)
 	github.com/grafana/loki v0.0.0-20231124145642-d62d4e37d1f3
@@ -24,8 +25,9 @@ require (
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/trace v1.32.0
 	go.uber.org/zap v1.26.0
-	github.com/go-redis/redis/v8 v8.11.5
 )
+
+require github.com/go-redis/cache/v8 v8.4.4
 
 require (
 	ariga.io/atlas v0.15.0 // indirect

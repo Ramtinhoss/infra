@@ -28,16 +28,6 @@ job "api" {
         timeout  = "5s"
         port     = "${port_number}"
       }
-
-      // Check if not present sandbox returns 127.0.0.1, we are serving custom error there
-      check {
-        name     = "dns-resolve-check"
-        type     = "script"
-        command  = "/bin/bash"
-        args     = ["-c", "dig @localhost -p ${dns_port_number} dead-sandbox.ko | grep -q '127.0.0.1'"]
-        interval = "20s"
-        timeout  = "1s"
-      }
     }
 
 %{ if update_stanza == "true" }

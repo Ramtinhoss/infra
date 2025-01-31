@@ -9,7 +9,7 @@ import (
 
 func New(isLocal bool) (*zap.SugaredLogger, error) {
 	config := zap.Config{
-		Level:             zap.NewAtomicLevelAt(zap.InfoLevel),
+		Level:             zap.NewAtomicLevelAt(zap.DebugLevel),
 		Development:       isLocal,
 		DisableStacktrace: !isLocal,
 		Encoding:          "console",

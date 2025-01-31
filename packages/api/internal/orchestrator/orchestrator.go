@@ -40,7 +40,7 @@ func New(
 		logger.Error("Error initializing Analytics client", zap.Error(err))
 	}
 
-	dnsServer := dns.New(redisClient)
+	dnsServer := dns.New(ctx, redisClient, logger)
 	port := utils.RequiredEnv("DNS_PORT", "Local DNS server resolving IPs for sandboxes")
 
 	if env.IsLocal() {
@@ -48,10 +48,7 @@ func New(
 	} else {
 		go func() {
 			logger.Info("Starting DNS server")
-
-			if err := dnsServer.Start(ctx, "0.0.0.0", port); err != nil {
-				logger.Panic("Failed starting DNS server", zap.Error(err))
-			}
+			dnsServer.Start(ctx, "0.0.0.0", port)
 		}()
 	}
 
