@@ -106,6 +106,7 @@ func (a *APIStore) PostSandboxesSandboxIDResume(c *gin.Context, sandboxID api.Sa
 		true,
 		&clientID,
 		snapshot.BaseEnvID,
+		teamInfo.Tier.ConcurrentInstances,
 	)
 	if err != nil {
 		a.sendAPIStoreError(c, http.StatusInternalServerError, fmt.Sprintf("Error resuming sandbox: %s", err))

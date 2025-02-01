@@ -22,6 +22,8 @@ import (
 	"github.com/e2b-dev/infra/packages/shared/pkg/telemetry"
 )
 
+const maxSandboxCreationInParallelPerNode = 3
+
 func (o *Orchestrator) CreateSandbox(
 	ctx context.Context,
 	sandboxID,
@@ -37,23 +39,24 @@ func (o *Orchestrator) CreateSandbox(
 	isResume bool,
 	clientID *string,
 	baseTemplateID string,
+	maxSandboxesPerTeam int64,
 ) (*api.Sandbox, error) {
 	childCtx, childSpan := o.tracer.Start(ctx, "create-sandbox")
 	defer childSpan.End()
 
-	// // Check if team has reached max instances
-	// err, releaseTeamSandboxReservation := o.instanceCache.Reserve(sandboxID, teamID, maxInstancesPerTeam)
-	// if err != nil {
-	// 	errMsg := fmt.Errorf("team '%s' has reached the maximum number of instances (%d)", teamID, maxInstancesPerTeam)
-	// 	telemetry.ReportCriticalError(ctx, fmt.Errorf("%w (error: %w)", errMsg, err))
-	//
-	// 	return nil, fmt.Errorf(
-	// 		"you have reached the maximum number of concurrent E2B sandboxes (%d). If you need more, "+
-	// 			"please contact us at 'https://e2b.dev/docs/getting-help'", maxInstancesPerTeam)
-	// }
-	//
-	// telemetry.ReportEvent(childCtx, "Reserved sandbox for team")
-	// defer releaseTeamSandboxReservation()
+	// Check if team has reached max instances
+	err, releaseTeamSandboxReservation := o.instanceCache.Reserve(sandboxID, team.Team.ID, maxSandboxesPerTeam)
+	if err != nil {
+		errMsg := fmt.Errorf("team '%s' has reached the maximum number of instances (%d)", team.Team.ID, maxSandboxesPerTeam)
+		telemetry.ReportCriticalError(ctx, fmt.Errorf("%w (error: %w)", errMsg, err))
+
+		return nil, fmt.Errorf(
+			"you have reached the maximum number of concurrent E2B sandboxes (%d). If you need more, "+
+				"please contact us at 'https://e2b.dev/docs/getting-help'", maxSandboxesPerTeam)
+	}
+
+	telemetry.ReportEvent(childCtx, "Reserved sandbox for team")
+	defer releaseTeamSandboxReservation()
 
 	features, err := sandbox.NewVersionInfo(build.FirecrackerVersion)
 	if err != nil {
@@ -208,7 +211,7 @@ func (o *Orchestrator) getLeastBusyNode(ctx context.Context) (leastBusyNode *Nod
 		// TODO: Incorporate the node's cached builds and total resources into the decision
 		for _, node := range o.nodes.Items() {
 			// To prevent overloading the node
-			if len(node.sbxsInProgress.Items()) > 3 || node.Status() != api.NodeStatusReady {
+			if len(node.sbxsInProgress.Items()) > maxSandboxCreationInParallelPerNode || node.Status() != api.NodeStatusReady {
 				continue
 			}
 

@@ -134,6 +134,7 @@ func (a *APIStore) PostSandboxes(c *gin.Context) {
 		false,
 		nil,
 		env.TemplateID,
+		teamInfo.Tier.ConcurrentInstances,
 	)
 	if err != nil {
 		a.sendAPIStoreError(c, http.StatusInternalServerError, err.Error())
