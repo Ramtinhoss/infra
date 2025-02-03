@@ -2,7 +2,6 @@ ENV := $(shell cat .last_used_env || echo "not-set")
 -include .env.${ENV}
 
 OTEL_TRACING_PRINT ?= false
-EXCLUDE_GITHUB ?= 1
 TEMPLATE_BUCKET_LOCATION := $(GCP_REGION)
 
 tf_vars := TF_VAR_client_machine_type=$(CLIENT_MACHINE_TYPE) \
@@ -22,11 +21,7 @@ tf_vars := TF_VAR_client_machine_type=$(CLIENT_MACHINE_TYPE) \
 	TF_VAR_template_bucket_name=$(TEMPLATE_BUCKET_NAME) \
 	TF_VAR_template_bucket_location=$(TEMPLATE_BUCKET_LOCATION)
 
-ifeq ($(EXCLUDE_GITHUB),1)
-	ALL_MODULES := $(shell cat main.tf | grep "^module" | awk '{print $$2}' | grep -v -e "github_tf")
-else
-	ALL_MODULES := $(shell cat main.tf | grep "^module" | awk '{print $$2}')
-endif
+ALL_MODULES := $(shell cat main.tf | grep "^module" | awk '{print $$2}')
 
 # Login for Packer and Docker (uses gcloud user creds)
 # Login for Terraform (uses application default creds)
