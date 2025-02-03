@@ -38,6 +38,7 @@ const (
 var sandboxStartRequestLimit = semaphore.NewWeighted(defaultRequestLimit)
 
 type APIStore struct {
+	Health               bool
 	posthog              *analyticscollector.PosthogClient
 	Tracer               trace.Tracer
 	orchestrator         *orchestrator.Orchestrator
@@ -121,6 +122,7 @@ func NewAPIStore(ctx context.Context) *APIStore {
 	templateSpawnCounter := utils.NewTemplateSpawnCounter(time.Minute, dbClient)
 
 	return &APIStore{
+		Health:               true,
 		orchestrator:         orch,
 		templateManager:      templateManager,
 		db:                   dbClient,
@@ -171,7 +173,12 @@ func (a *APIStore) sendAPIStoreError(c *gin.Context, code int, message string) {
 }
 
 func (a *APIStore) GetHealth(c *gin.Context) {
-	c.String(http.StatusOK, "Health check successful")
+	if a.Health {
+		c.String(http.StatusOK, "Health check successful")
+		return
+	}
+
+	c.String(http.StatusServiceUnavailable, "Health check failed")
 }
 
 func (a *APIStore) GetTeamFromAPIKey(ctx context.Context, apiKey string) (authcache.AuthTeamInfo, *api.APIError) {

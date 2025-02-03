@@ -109,19 +109,41 @@ resource "nomad_job" "docker_reverse_proxy" {
   }
 }
 
-resource "nomad_job" "client_proxy" {
-  jobspec = file("${path.module}/client-proxy.hcl")
+data "google_storage_bucket_object" "proxy" {
+  name   = "proxy"
+  bucket = var.fc_env_pipeline_bucket_name
+}
+
+data "external" "proxy_checksum" {
+  program = ["bash", "${path.module}/checksum.sh"]
+
+  query = {
+    base64 = data.google_storage_bucket_object.proxy.md5hash
+  }
+}
+
+
+
+
+resource "nomad_job" "proxy" {
+  jobspec = file("${path.module}/proxy.hcl")
 
   hcl2 {
     vars = {
-      gcp_zone                        = var.gcp_zone
-      client_proxy_port_number        = var.client_proxy_port.port
-      client_proxy_port_name          = var.client_proxy_port.name
-      client_proxy_health_port_number = var.client_proxy_health_port.port
-      client_proxy_health_port_name   = var.client_proxy_health_port.name
-      client_proxy_health_port_path   = var.client_proxy_health_port.path
-      load_balancer_conf              = templatefile("${path.module}/proxies/client.conf", { dns_port = var.api_dns_port_number })
-      nginx_conf                      = file("${path.module}/proxies/nginx.conf")
+      gcp_project = var.gcp_project_id
+      gcp_region  = var.gcp_region
+      gcp_zone    = var.gcp_zone
+      port        = var.template_manager_port
+      environment = var.environment
+
+      api_secret                   = var.api_secret
+      bucket_name                  = var.fc_env_pipeline_bucket_name
+      docker_registry              = var.custom_envs_repository_name
+      google_service_account_key   = var.google_service_account_key
+      proxy_checksum               = data.external.proxy_checksum.result.hex
+      otel_tracing_print           = var.otel_tracing_print
+      template_bucket_name         = var.template_bucket_name
+      otel_collector_grpc_endpoint = "localhost:4317"
     }
   }
 }

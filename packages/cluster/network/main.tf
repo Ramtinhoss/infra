@@ -301,7 +301,7 @@ resource "google_compute_health_check" "default" {
   check_interval_sec  = lookup(each.value["http_health_check"], "check_interval_sec", 5)
   timeout_sec         = lookup(each.value["http_health_check"], "timeout_sec", 5)
   healthy_threshold   = lookup(each.value["http_health_check"], "healthy_threshold", 2)
-  unhealthy_threshold = lookup(each.value["http_health_check"], "unhealthy_threshold", 2)
+  unhealthy_threshold = lookup(each.value["http_health_check"], "unhealthy_threshold", 1)
 
   log_config {
     enable = false

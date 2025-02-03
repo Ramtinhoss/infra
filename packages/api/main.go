@@ -269,7 +269,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		<-signalCtx.Done()
-
+		apiStore.Health = false
 		// if the parent context `ctx` is canceled the
 		// shutdown will return early. This should only happen
 		// if there's an error in starting the http service
@@ -278,6 +278,7 @@ func main() {
 		// even have a chance to return before the program
 		// returns.
 
+		time.Sleep(60 * time.Second)
 		if err := s.Shutdown(ctx); err != nil {
 			exitCode.Add(1)
 			log.Printf("http service (%d) shutdown error: %v", port, err)
