@@ -159,7 +159,6 @@ client {
   meta {
     "node_pool" = "api"
   }
-  max_kill_timeout = "300s"
 }
 
 plugin_dir = "/opt/nomad/plugins"
@@ -172,13 +171,6 @@ plugin "docker" {
     auth {
       config = "/root/docker/config.json"
     }
-  }
-}
-
-plugin "raw_exec" {
-  config {
-    enabled = true
-    no_cgroups = true
   }
 }
 

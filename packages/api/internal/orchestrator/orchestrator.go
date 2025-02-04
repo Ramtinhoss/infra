@@ -47,7 +47,7 @@ func New(
 		logger.Info("Running locally, skipping starting DNS server")
 	} else {
 		go func() {
-			logger.Info("Starting DNS server")
+			logger.Info("Starting DNS server on port", port)
 			dnsServer.Start(ctx, "0.0.0.0", port)
 		}()
 	}
