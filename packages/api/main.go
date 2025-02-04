@@ -278,7 +278,7 @@ func main() {
 		// even have a chance to return before the program
 		// returns.
 
-		time.Sleep(60 * time.Second)
+		time.Sleep(15 * time.Second)
 		if err := s.Shutdown(ctx); err != nil {
 			exitCode.Add(1)
 			log.Printf("http service (%d) shutdown error: %v", port, err)

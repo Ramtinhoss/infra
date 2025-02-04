@@ -50,7 +50,7 @@ job "api" {
       driver       = "docker"
       # If we need more than 30s we will need to update the max_kill_timeout in nomad
       # https://developer.hashicorp.com/nomad/docs/configuration/client#max_kill_timeout
-      kill_timeout = "300s"
+      kill_timeout = "20s"
       kill_signal  = "SIGTERM"
 
       resources {
@@ -76,7 +76,7 @@ job "api" {
         REDIS_URL                     = "${redis_url}"
         DNS_PORT                      = "${dns_port_number}"
         # This is here just because it is required in some part of our code which is transitively imported
-        TEMPLATE_BUCKET_NAME          = "skipar"
+        TEMPLATE_BUCKET_NAME          = "skip"
       }
 
       config {
