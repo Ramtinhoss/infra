@@ -95,7 +95,7 @@ resource "nomad_job" "docker_reverse_proxy" {
   hcl2 {
     vars = {
       gcp_zone                      = var.gcp_zone
-      image_name                    = var.docker_reverse_proxy_image_digest
+      image_name                    = var.docker_reverse_proxy_docker_image_digest
       postgres_connection_string    = data.google_secret_manager_secret_version.postgres_connection_string.secret_data
       google_service_account_secret = var.docker_reverse_proxy_service_account_key
       port_number                   = var.docker_reverse_proxy_port.port
@@ -109,43 +109,17 @@ resource "nomad_job" "docker_reverse_proxy" {
   }
 }
 
-data "google_storage_bucket_object" "proxy" {
-  name   = "proxy"
-  bucket = var.fc_env_pipeline_bucket_name
-}
+resource "nomad_job" "client_proxy" {
+  jobspec = templatefile("${path.module}/client-proxy.hcl",
+    {
+      gcp_zone           = var.gcp_zone
+      port_name          = var.client_proxy_port.name
+      port_number        = var.client_proxy_port.port
+      health_port_number = var.client_proxy_health_port.port
+      environment        = var.environment
 
-data "external" "proxy_checksum" {
-  program = ["bash", "${path.module}/checksum.sh"]
-
-  query = {
-    base64 = data.google_storage_bucket_object.proxy.md5hash
-  }
-}
-
-
-
-
-resource "nomad_job" "proxy" {
-  jobspec = file("${path.module}/proxy.hcl")
-
-  hcl2 {
-    vars = {
-      gcp_project = var.gcp_project_id
-      gcp_region  = var.gcp_region
-      gcp_zone    = var.gcp_zone
-      port        = var.template_manager_port
-      environment = var.environment
-
-      api_secret                   = var.api_secret
-      bucket_name                  = var.fc_env_pipeline_bucket_name
-      docker_registry              = var.custom_envs_repository_name
-      google_service_account_key   = var.google_service_account_key
-      proxy_checksum               = data.external.proxy_checksum.result.hex
-      otel_tracing_print           = var.otel_tracing_print
-      template_bucket_name         = var.template_bucket_name
-      otel_collector_grpc_endpoint = "localhost:4317"
-    }
-  }
+      image_name = var.client_proxy_docker_image_digest
+  })
 }
 
 resource "nomad_job" "session_proxy" {

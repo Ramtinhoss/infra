@@ -165,6 +165,15 @@ module "docker_reverse_proxy" {
   prefix = var.prefix
 }
 
+module "client_proxy" {
+  source = "./packages/client-proxy"
+
+  gcp_project_id = var.gcp_project_id
+  gcp_region     = var.gcp_region
+
+  orchestration_repository_name = module.init.orchestration_repository_name
+}
+
 module "nomad" {
   source = "./packages/nomad"
 
@@ -192,12 +201,14 @@ module "nomad" {
   analytics_collector_host_secret_name      = module.init.analytics_collector_host_secret_name
   analytics_collector_api_token_secret_name = module.init.analytics_collector_api_token_secret_name
   api_admin_token_name                      = module.api.api_admin_token_name
+
   # Proxies
   session_proxy_service_name = var.session_proxy_service_name
   session_proxy_port         = var.session_proxy_port
 
-  client_proxy_port        = var.client_proxy_port
-  client_proxy_health_port = var.client_proxy_health_port
+  client_proxy_port                = var.client_proxy_port
+  client_proxy_health_port         = var.client_proxy_health_port
+  client_proxy_docker_image_digest = module.client_proxy.client_proxy_docker_image_digest
 
   domain_name = var.domain_name
 
@@ -218,7 +229,7 @@ module "nomad" {
   loki_service_port = var.loki_service_port
 
   # Docker reverse proxy
-  docker_reverse_proxy_image_digest        = module.docker_reverse_proxy.docker_reverse_proxy_image_digest
+  docker_reverse_proxy_docker_image_digest = module.docker_reverse_proxy.docker_reverse_proxy_docker_image_digest
   docker_reverse_proxy_port                = var.docker_reverse_proxy_port
   docker_reverse_proxy_service_account_key = module.docker_reverse_proxy.docker_reverse_proxy_service_account_key
 

@@ -96,6 +96,11 @@ variable "session_proxy_port" {
   })
 }
 
+
+variable "client_proxy_docker_image_digest" {
+  type = string
+}
+
 variable "client_proxy_health_port" {
   type = object({
     name = string
@@ -179,7 +184,7 @@ variable "loki_service_port" {
 }
 
 # Docker reverse proxy
-variable "docker_reverse_proxy_image_digest" {
+variable "docker_reverse_proxy_docker_image_digest" {
   type = string
 }
 
