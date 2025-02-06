@@ -13,6 +13,7 @@ import (
 	"github.com/e2b-dev/infra/packages/api/internal/cache/instance"
 	"github.com/e2b-dev/infra/packages/api/internal/dns"
 	"github.com/e2b-dev/infra/packages/shared/pkg/env"
+	"github.com/e2b-dev/infra/packages/shared/pkg/logging"
 	"github.com/e2b-dev/infra/packages/shared/pkg/smap"
 )
 
@@ -21,7 +22,7 @@ type Orchestrator struct {
 	instanceCache *instance.InstanceCache
 	nodes         *smap.Map[*Node]
 	tracer        trace.Tracer
-	logger        *zap.SugaredLogger
+	logger        logging.Logger
 	analytics     *analyticscollector.Analytics
 	dns           *dns.DNS
 }
@@ -30,7 +31,7 @@ func New(
 	ctx context.Context,
 	tracer trace.Tracer,
 	nomadClient *nomadapi.Client,
-	logger *zap.SugaredLogger,
+	logger logging.Logger,
 	posthogClient *analyticscollector.PosthogClient,
 	redisClient *redis.Client,
 ) (*Orchestrator, error) {

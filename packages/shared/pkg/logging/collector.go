@@ -8,7 +8,7 @@ import (
 	"github.com/e2b-dev/infra/packages/shared/pkg/logging/exporter"
 )
 
-func NewCollectorLogger() (*zap.SugaredLogger, error) {
+func NewCollectorLogger() (Logger, error) {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:       "timestamp",
 		MessageKey:    "message",
